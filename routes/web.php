@@ -50,6 +50,9 @@ Route::middleware([
         Route::get('/', [StudentController::class, 'index'])->name('students');
         Route::get('/create_student', [StudentController::class, 'create'])->name('students.create_student');
         Route::get('/update_student/{student}', [StudentController::class, 'edit'])->name('students.update_student');
+        Route::get('/details/{student?}', function($student = null) {
+            return view('students.details', ['studentId' => $student]);
+        })->name('students.details');
     });
 
 
@@ -71,5 +74,13 @@ Route::middleware([
     Route::prefix('settings')->group(function(){
         Route::get('/', [SchoolYearController::class, 'index'])->name('settings');
         Route::get('/create_school_year', [SchoolYearController::class, 'create'])->name('settings.create_schoolyear');
+        Route::get('/progression', function() {
+            return view('settings.progression');
+        })->name('settings.progression');
     });
+
+    // Route pour la progression des élèves
+    Route::get('/progression', function () {
+        return view('progression');
+    })->name('progression');
 });

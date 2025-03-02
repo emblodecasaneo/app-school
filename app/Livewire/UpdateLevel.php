@@ -36,7 +36,7 @@ class UpdateLevel extends Component
 
                  $level->libelle = $this->libelle;
                  $level->code = $this->code;
-                 $level->scolarite = 0;
+                 $level->scolarite = 10000;
                  $level->save();
                  if($level){
                  $this->libelle ='';

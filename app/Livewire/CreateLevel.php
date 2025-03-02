@@ -12,12 +12,14 @@ class CreateLevel extends Component
 
     public $libelle;
     public $code;
+    public $scolarite;
     public $activeYear;
 
     public function store(Level $level){
        $this->validate([
         "libelle"=>'required',
-        "code"=>"required|unique:levels,code"
+        "code"=>"required|unique:levels,code",
+        "scolarite"=>"required|numeric|min:0"
        ]);
 
       try{
@@ -26,11 +28,12 @@ class CreateLevel extends Component
                 $level->libelle = $this->libelle;
                 $level->school_year_id = $this->activeYear->id;
                 $level->code = $this->code . "" .$this->activeYear->curent_year;
-                $level->scolarite = 0;
+                $level->scolarite = $this->scolarite;
                 $level->save();
                 if($level){
                 $this->libelle ='';
                 $this->code = "";
+                $this->scolarite = "";
                 }
                 return redirect()->route('niveaux')->with('success', 'Niveau ajouté avec success !');
       }catch(Exception $e){

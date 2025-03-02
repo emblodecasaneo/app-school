@@ -3,7 +3,7 @@
         {{-- Titre et Bouton créer --}}
         <div class="flex items-center justify-between">
             <div class="w-1/2">
-                <input type="text" name="search" placeholder="Rechercher un(e) élève par nom"
+                <input type="text" name="search" placeholder="Rechercher un(e) élève par nom ou matricule"
                     class="rounded-md w-1/2 mr-2 border-gray-300" wire:model.live="search" />
 
                 <Select type="text" name="genre" id="genre" class="rounded-md w-1/4  border-gray-300"
@@ -14,11 +14,20 @@
                 </Select>
             </div>
 
-            <a href="{{ route('students.create_student') }}"
-                class="bg-blue-500 rounded-md p-2 text-sm text-white">Ajouter
-                un(e)
-                élève</a>
+            <div class="flex space-x-2">
+                <a href="{{ route('students.details') }}"
+                    class="bg-indigo-500 rounded-md p-2 text-sm text-white">Consulter un élève</a>
+                <a href="{{ route('students.create_student') }}"
+                    class="bg-blue-500 rounded-md p-2 text-sm text-white">Ajouter un(e) élève</a>
+            </div>
         </div>
+        
+        @if($activeYear)
+        <div class="mt-2 bg-blue-50 p-2 rounded-md text-blue-800 text-sm">
+            Affichage des élèves inscrits pour l'année scolaire <strong>{{ $activeYear->school_year }}</strong>
+        </div>
+        @endif
+        
         <div class="flex flex-col  mt-5 boder-gray-400">
             {{-- Message qui appaitra après opération --}}
             @if (Session::get('success'))
@@ -77,13 +86,18 @@
                                         </td>
                                         <td  class="text-sm  font-medium text-gray-900 px-4 py-4">
                                             <div style="justify-content: center;" class="flex items-center">
+                                                <a href="{{ route('students.details', $item->id) }}"
+                                                    class="mr-2 text-md text-white rounded-sm p-2" title="Consulter">
+                                                    <img alt="consulter" style="height: 25px ; width:25px"
+                                                        src="{{ asset('assets/view.png') }}" />
+                                                </a>
                                                 <a href="{{ route('students.update_student', $item) }}"
-                                                    class="mr-2 text-md text-white rounded-sm p-2">
+                                                    class="mr-2 text-md text-white rounded-sm p-2" title="Modifier">
                                                     <img alt="modifier" style="height: 25px ; width:25px"
                                                         src="{{ asset('assets/editer-le-profil.png') }}" />
                                                 </a>
-                                                <button wire:click="delete({{ $item->id }})">
-                                                    <img alt="modifier" style="height: 25px ; width:25px"
+                                                <button wire:click="delete({{ $item->id }})" title="Supprimer">
+                                                    <img alt="supprimer" style="height: 25px ; width:25px"
                                                         src="{{ asset('assets/supprimer.png') }}" />
                                                 </button>
                                             </div>

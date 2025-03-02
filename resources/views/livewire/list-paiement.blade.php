@@ -3,6 +3,7 @@
         {{-- Titre et Bouton créer --}}
         <div class="flex items-center justify-between">
             <div class="w-1/2">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Paiements de l'année scolaire {{ $activeYear->libelle ?? 'active' }}</h2>
                 <input type="text" name="search" placeholder="Rechercher une inscription"
                     class="rounded-md w-1/2 mr-2 border-gray-300" wire:model.live="search" />
 

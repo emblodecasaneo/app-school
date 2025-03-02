@@ -37,17 +37,30 @@ class CreatePaiement extends Component
                 $this->nom = $currentStudent->nom. " " .$currentStudent->prenom;
                 $this->student_id = $currentStudent->id;
                 $currentIns = Attributtion::where('student_id', $this->student_id)->where('school_year_id', $this->activeYear->id)->first();
-                $currentClass = Classe::whereHas('level', function($query) use ($currentIns){
-                    $query->where('school_year_id', $currentIns->id);
-                })->first();
-                $currentLevel = Level::where('id', $currentClass->level_id)->first();
-                $this->currentLevelAmount = $currentLevel->scolarite;
-                $this->classe_id = $currentClass->id;
-
-           }else{
-            $this->nom = "Ce matricule n'est lié à aucun élève , vérifier votre matricule et rééssayez svp !";
-           };
-        }else{
+                
+                if($currentIns) {
+                    $currentClass = Classe::whereHas('level', function($query) use ($currentIns){
+                        $query->where('school_year_id', $currentIns->school_year_id);
+                    })->first();
+                    
+                    if($currentClass) {
+                        $currentLevel = Level::where('id', $currentClass->level_id)->first();
+                        if($currentLevel) {
+                            $this->currentLevelAmount = $currentLevel->scolarite;
+                            $this->classe_id = $currentClass->id;
+                        } else {
+                            $this->nom = "Aucun niveau trouvé pour cet élève dans l'année scolaire actuelle.";
+                        }
+                    } else {
+                        $this->nom = "Aucune classe trouvée pour cet élève dans l'année scolaire actuelle.";
+                    }
+                } else {
+                    $this->nom = "Cet élève n'est pas inscrit pour l'année scolaire actuelle.";
+                }
+           } else {
+                $this->nom = "Ce matricule n'est lié à aucun élève, vérifier votre matricule et réessayez svp !";
+           }
+        } else {
             $this->nom ="";
         }
 

@@ -5,10 +5,15 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0  flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-mark class="block h-9 w-auto" />
-                    </a>
                     <h1 class="text-2xl font-bold text-gray-900">LYNCOSC</h1>
+                    @php
+                        $activeYear = \App\Models\SchoolYear::where('active', '1')->first();
+                    @endphp
+                    @if($activeYear)
+                    <span class="ml-4 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                        Année active: {{ $activeYear->school_year }}
+                    </span>
+                    @endif
                 </div>
 
                 <!-- Navigation Links -->
@@ -31,8 +36,11 @@
                     <x-nav-link href="{{ route('paiements') }}" :active="request()->routeIs('paiements')">
                         {{ __('Paiements') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('settings') }}" :active="request()->routeIs('settings')">
-                        {{ __('Année scolaire') }}
+                    <x-nav-link href="{{ route('progression') }}" :active="request()->routeIs('progression')">
+                        {{ __('Progression') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('settings.progression') }}" :active="request()->routeIs('settings.progression')">
+                        {{ __('Paramètres') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -63,6 +71,10 @@
                             <!-- Account Management -->
                             <x-dropdown-link href="#">
                                 {{ __('Paramettre') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link href="{{ route('settings.progression') }}">
+                                {{ __('Progression des élèves') }}
                             </x-dropdown-link>
 
                             <x-dropdown-link href="{{ route('profile.show') }}">
