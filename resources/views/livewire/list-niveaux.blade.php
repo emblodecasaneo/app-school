@@ -14,6 +14,11 @@
                     {{ Session::get('success') }}
                 </div>
             @endif
+            @if (Session::get('error'))
+                <div class="block p-2 bg-red-300 text-gray-900 rounded-sm mb-2 shadow-sm mt-2">
+                    {{ Session::get('error') }}
+                </div>
+            @endif
             {{-- Style du tableau --}}
             <div class="overflow-x-auto">
                 <div class="inline-block min-w-full">
@@ -41,7 +46,6 @@
                                         <td class="text-sm font-medium text-gray-900 px-4 py-4">
                                             {{ $item->scolarite }}
                                         </td>
-
                                         <td class="text-sm  font-medium text-gray-900 px-4 py-4">
                                             <div style="justify-content: center;" class="flex items-center">
                                                 <a href="{{ route('niveaux.update_level', $item) }}"

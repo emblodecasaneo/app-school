@@ -85,9 +85,27 @@
         <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Progression des élèves</h2>
             
+            <div class="bg-blue-50 p-4 rounded-md mb-6">
+                <p class="text-blue-800">
+                    <strong>Comment ça fonctionne :</strong> La progression des élèves permet de créer automatiquement des inscriptions pour l'année active en sélectionnant des élèves d'une année précédente.
+                </p>
+                <ul class="list-disc ml-6 mt-2 text-blue-700">
+                    <li>Sélectionnez une année source et une classe</li>
+                    <li>Choisissez une classe de destination dans l'année active</li>
+                    <li>Sélectionnez les élèves à promouvoir</li>
+                    <li>Cliquez sur "Promouvoir les élèves sélectionnés" pour créer les inscriptions</li>
+                </ul>
+            </div>
+            
             @if($progressionCompleted)
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                     <p>{{ $progressionMessage }}</p>
+                </div>
+            @endif
+
+            @if($message)
+                <div class="mb-4 p-4 rounded-md {{ $messageType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                    {{ $message }}
                 </div>
             @endif
 
@@ -100,9 +118,14 @@
                         <select id="selectedYear" wire:model.live="selectedYear" class="w-full rounded-md border-gray-300">
                             <option value="">Sélectionner une année</option>
                             @foreach($availableYears as $year)
-                                <option value="{{ $year->id }}">{{ $year->libelle }}</option>
+                                @if($activeYear && $year->id === $activeYear->id)
+                                    <option value="{{ $year->id }}" disabled class="bg-gray-200 text-gray-500">{{ $year->libelle }} (Année active - non sélectionnable)</option>
+                                @else
+                                    <option value="{{ $year->id }}" class="{{ $selectedYear == $year->id ? 'bg-blue-100 font-semibold' : '' }}">{{ $year->libelle }}{{$year->school_year}}</option>
+                                @endif
                             @endforeach
                         </select>
+                        <p class="text-sm text-gray-500 mt-1">Sélectionnez une année précédente pour récupérer les élèves à promouvoir.</p>
                     </div>
 
                     @if($selectedYear)
@@ -120,7 +143,7 @@
 
                 <!-- Sélection de la classe cible -->
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-3">Destination (Année active: {{ $activeYear->libelle }})</h3>
+                    <h3 class="text-lg font-semibold mb-3">Destination (Année active: {{ $activeYear->libelle ?? 'Non définie' }})</h3>
                     <div class="mb-4">
                         <label for="targetClass" class="block text-sm font-medium text-gray-700 mb-1">Sélectionner une classe de destination</label>
                         <select id="targetClass" wire:model="targetClass" class="w-full rounded-md border-gray-300">
@@ -129,6 +152,13 @@
                                 <option value="{{ $class->id }}">{{ $class->libelle }}</option>
                             @endforeach
                         </select>
+                        @if(count($targetClasses) === 0)
+                            <p class="text-sm text-red-500 mt-1">Aucune classe disponible. Veuillez d'abord créer des classes.</p>
+                        @else
+                            <p class="text-sm text-gray-500 mt-1">{{ count($targetClasses) }} classes disponibles pour la destination.</p>
+                            <p class="text-sm text-blue-500 mt-1">Toutes les classes sont disponibles comme destination, indépendamment de l'année scolaire.</p>
+                            <p class="text-sm text-green-500 mt-1">Classes disponibles: {{ implode(', ', $targetClasses->pluck('libelle')->toArray()) }}</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -190,11 +220,14 @@
                     <div class="mt-4 flex justify-end">
                         <button 
                             wire:click="progressStudents" 
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
                             {{ empty($selectedStudents) || !$targetClass ? 'disabled' : '' }}
                             {{ empty($selectedStudents) || !$targetClass ? 'opacity-50 cursor-not-allowed' : '' }}
                         >
-                            Promouvoir les élèves sélectionnés
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Promouvoir les élèves sélectionnés ({{ count($selectedStudents) }})
                         </button>
                     </div>
                 </div>

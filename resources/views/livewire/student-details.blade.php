@@ -42,14 +42,14 @@
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">{{ $student->nom }} {{ $student->prenom }}</h2>
                 <p class="text-gray-600">Matricule: {{ $student->matricule }}</p>
-                <p class="text-gray-600">Date de naissance: {{ $student->date_naissance }}</p>
+                <p class="text-gray-600">Date de naissance: {{ $student->naissance }}</p>
                 <p class="text-gray-600">Sexe: {{ $student->sexe == 'M' ? 'Masculin' : 'Féminin' }}</p>
                 <p class="text-gray-600">Contact parent: {{ $student->contact_parent }}</p>
             </div>
             <div class="text-right">
                 @if($currentAttribution)
                 <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md">
-                    <p class="font-semibold">Classe actuelle: {{ $currentAttribution->classe->libelle ?? 'N/A' }}</p>
+                    <p class="font-semibold">Classe actuelle: {{ $currentAttribution->classe->libelle?? 'N/A' }}</p>
                     <p>Niveau: {{ $currentAttribution->classe->level->libelle ?? 'N/A' }}</p>
                     <p>Année: {{ $activeYear->school_year }}</p>
                 </div>
@@ -91,8 +91,8 @@
                     {{ $totalDue > 0 ? round(($totalPaid / $totalDue) * 100) : 0 }}%
                 </span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-4">
-                <div class="bg-green-600 h-4 rounded-full" style="width: {{ $totalDue > 0 ? min(100, ($totalPaid / $totalDue) * 100) : 0 }}%"></div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-green-600 h-2 rounded-full" style="width: {{ $totalDue > 0 ? min(100, ($totalPaid / $totalDue) * 100) : 0 }}%"></div>
             </div>
         </div>
     </div>

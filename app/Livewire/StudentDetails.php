@@ -17,6 +17,7 @@ class StudentDetails extends Component
     public $payments = [];
     public $activeYear;
     public $currentAttribution;
+    public $attribute;
     public $totalPaid = 0;
     public $totalDue = 0;
     public $paymentStatus = '';
@@ -76,6 +77,7 @@ class StudentDetails extends Component
         // Récupérer l'attribution pour l'année active
         $attributions = collect($this->attributions);
         $this->currentAttribution = $attributions->where('school_year_id', $this->activeYear->id)->first();
+        //dd($this->currentAttribution);
         
         // Récupérer tous les paiements de l'élève
         $this->payments = Payment::where('student_id', $this->studentId)
@@ -119,6 +121,7 @@ class StudentDetails extends Component
                     'status' => $yearPayments >= $levelScolarite ? 'Soldé' : 'Non soldé',
                     'is_active' => $attribution['schoolyear']['active'] == '1'
                 ];
+
             }
         }
     }

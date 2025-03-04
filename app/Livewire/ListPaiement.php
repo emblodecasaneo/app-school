@@ -18,6 +18,7 @@ class ListPaiement extends Component
     public $dialogAttDeletion = false;
     public $selectName;
     public $activeYear;
+    public $paymentIdToDelete;
 
     public function mount()
     {
@@ -61,20 +62,43 @@ class ListPaiement extends Component
         return view('livewire.list-paiement', [
             'paiementList' => $paiementList, 
             'allClass' => $allClass,
-            'activeYear' => $this->activeYear
+            'activeYear' => $this->activeYear,
+            'items' => $paiementList
         ]);
     }
 
-    public function delete(Payment $payment)
+    public function delete($item)
     {
-        $payment->delete();
-        return redirect()->route('paiements')->with('success', 'Paiement supprimé avec succès');
+        $payment = Payment::find($item);
+        if ($payment) {
+            $payment->delete();
+            session()->flash('success', 'Paiement supprimé avec succès');
+        } else {
+            session()->flash('error', 'Paiement introuvable');
+        }
+        
+        return redirect()->route('paiements');
     }
 
-    public function confirmingAttributtionDeletion(Payment $attributtion)
+    public function confirmingAttributtionDeletion(Payment $payment)
     {
-        $currentStudent = Student::where('id', $attributtion->student_id)->first();
+        $currentStudent = Student::where('id', $payment->student_id)->first();
         $this->selectName = $currentStudent->nom . " " . $currentStudent->prenom;
+        $this->paymentIdToDelete = $payment->id;
         $this->dialogAttDeletion = true;
+    }
+
+    public function deleteConfirmed()
+    {
+        $payment = Payment::find($this->paymentIdToDelete);
+        if ($payment) {
+            $payment->delete();
+            session()->flash('success', 'Paiement supprimé avec succès');
+        } else {
+            session()->flash('error', 'Paiement introuvable');
+        }
+        
+        $this->dialogAttDeletion = false;
+        $this->paymentIdToDelete = null;
     }
 }

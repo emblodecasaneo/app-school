@@ -12,7 +12,7 @@ class Level extends Model
 
 
     public function schoolYear(){
-        return $this->belongsTo(SchoolYear::class);
+        return $this->belongsTo(SchoolYear::class)->withDefault();
     }
 
     public function classes(){

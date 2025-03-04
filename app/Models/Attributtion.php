@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class Attributtion extends Model
 {
     use HasFactory;
+    
+    protected $fillable = [
+        'student_id',
+        'classe_id',
+        'school_year_id'
+    ];
 
     public function schoolyear(){
         return $this->belongsTo(SchoolYear::class);

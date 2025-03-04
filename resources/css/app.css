@@ -5,3 +5,40 @@
 [x-cloak] {
     display: none;
 }
+
+/* Styles personnalisés pour Poppins */
+@layer base {
+    html {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+    }
+    
+    .font-poppins {
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .font-poppins-light {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 300;
+    }
+    
+    .font-poppins-medium {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+    }
+    
+    .font-poppins-semibold {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+    }
+    
+    .font-bold {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+    }
+}

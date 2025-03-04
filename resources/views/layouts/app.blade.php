@@ -8,32 +8,50 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <!-- Styles -->
         @livewireStyles
+        
+        <style>
+            /* Styles pour la navigation et le header fixes */
+            .fixed-nav-container {
+                position: sticky;
+                top: 0;
+                z-index: 50;
+            }
+            
+            .content-wrapper {
+                padding-top: 0; /* Ajuster si nécessaire */
+            }
+        </style>
     </head>
     <body class="font-sans antialiased">
         <x-banner />
 
         <div class="min-h-screen bg-gray-100">
-            @livewire('navigation-menu')
+            <div class="fixed-nav-container">
+                @include('navigation-menu')
 
-            <!-- Page Heading -->
-            @if (isset($header))
-                <header class="bg-white shadow">
-                    <div class="max-w-8xl mx-4 py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
+                <!-- Page Heading -->
+                @if (isset($header))
+                    <header class="bg-white shadow">
+                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                                {{ $header }}
+                            </h2>
+                        </div>
+                    </header>
+                @endif
+            </div>
 
             <!-- Page Content -->
-            <main>
+            <main class="content-wrapper">
                 {{ $slot }}
             </main>
         </div>

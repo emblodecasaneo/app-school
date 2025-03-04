@@ -21,6 +21,13 @@ class Classe extends Model
 
 
     public function payments(){
-        return $this->HasMany(Classe::class);
+        return $this->HasMany(Payment::class);
+    }
+
+    /**
+     * Get the averages associated with the classe.
+     */
+    public function averages(){
+        return $this->hasMany(Average::class);
     }
 }

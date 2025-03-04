@@ -66,4 +66,13 @@ class StudentController extends Controller
     {
         //
     }
+
+    /**
+     * Display the inscriptions page.
+     */
+    public function inscriptions()
+    {
+        $currentYear = SchoolYear::where('active', '1')->first();
+        return view('inscriptions.list', compact('currentYear'));
+    }
 }

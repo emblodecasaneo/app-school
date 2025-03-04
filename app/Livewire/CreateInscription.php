@@ -68,7 +68,7 @@ class CreateInscription extends Component
         $this->activeYear = SchoolYear::where('active', '1')->first();
 
         //charger les niveuaux qui appartiennent à l'année en cour
-        $getAllLevels = Level::where('school_year_id', $this->activeYear->id)->get();
+        $getAllLevels = Level::all();
 
         if(isset($this->matricule)){
             $currentStudent = Student::where('matricule', 'LIKE' ,  '%' .$this->matricule. "%")->first();

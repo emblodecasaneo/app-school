@@ -1,10 +1,10 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 w-full">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-8xl  mx-5 px-2 sm:px-6 lg:px-8">
+    <div class="max-w-8xl mx-0 px-2 sm:px-6 lg:px-8 bg-indigo-400">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
-                <div class="shrink-0  flex items-center">
+                <div class="shrink-0 flex items-center">
                     <h1 class="text-2xl font-bold text-gray-900">LYNCOSC</h1>
                     @php
                         $activeYear = \App\Models\SchoolYear::where('active', '1')->first();
@@ -21,26 +21,31 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    
+                    @if(Auth::user()->role !== 'intendant')
+                        <x-nav-link href="{{ route('averages') }}" :active="request()->routeIs('averages')">
+                            {{ __('Progression') }}
+                        </x-nav-link>
+                        
+                        <x-nav-link href="{{ route('niveaux') }}" :active="request()->routeIs('niveaux')">
+                            {{ __('Niveaux') }}
+                        </x-nav-link>
+                        
+                        <x-nav-link href="{{ route('classes') }}" :active="request()->routeIs('classes')">
+                            {{ __('Classes') }}
+                        </x-nav-link>
+                    @endif
+                    
                     <x-nav-link href="{{ route('inscriptions') }}" :active="request()->routeIs('inscriptions')">
                         {{ __('Inscriptions') }}
                     </x-nav-link>
+                    
                     <x-nav-link href="{{ route('students') }}" :active="request()->routeIs('students')">
                         {{ __('Elèves') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('niveaux') }}" :active="request()->routeIs('niveaux')">
-                        {{ __('Niveaux') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('classes') }}" :active="request()->routeIs('classes')">
-                        {{ __('Classes') }}
-                    </x-nav-link>
+                    
                     <x-nav-link href="{{ route('paiements') }}" :active="request()->routeIs('paiements')">
                         {{ __('Paiements') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('progression') }}" :active="request()->routeIs('progression')">
-                        {{ __('Progression') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('settings.progression') }}" :active="request()->routeIs('settings.progression')">
-                        {{ __('Paramètres') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -120,6 +125,36 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            
+            @if(Auth::user()->role !== 'intendant')
+                <x-responsive-nav-link href="{{ route('grades.management') }}" :active="request()->routeIs('grades.management')">
+                    {{ __('Gestion des Notes') }}
+                </x-responsive-nav-link>
+                
+                <x-responsive-nav-link href="{{ route('averages') }}" :active="request()->routeIs('averages')">
+                    {{ __('Moyennes') }}
+                </x-responsive-nav-link>
+                
+                <x-responsive-nav-link href="{{ route('niveaux') }}" :active="request()->routeIs('niveaux')">
+                    {{ __('Niveaux') }}
+                </x-responsive-nav-link>
+                
+                <x-responsive-nav-link href="{{ route('classes') }}" :active="request()->routeIs('classes')">
+                    {{ __('Classes') }}
+                </x-responsive-nav-link>
+            @endif
+            
+            <x-responsive-nav-link href="{{ route('inscriptions') }}" :active="request()->routeIs('inscriptions')">
+                {{ __('Inscriptions') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link href="{{ route('students') }}" :active="request()->routeIs('students')">
+                {{ __('Elèves') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link href="{{ route('paiements') }}" :active="request()->routeIs('paiements')">
+                {{ __('Paiements') }}
             </x-responsive-nav-link>
         </div>
 

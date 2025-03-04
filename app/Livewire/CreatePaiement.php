@@ -12,42 +12,60 @@ use Exception;
 use Livewire\Component;
 
 class CreatePaiement extends Component
-{   public $level_id;
+{   
+    public $level_id;
     public $matricule;
     public $currentLevelAmount;
     public $classe_id;
     public $school_year_id;
     public $student_id;
     public $nom;
-    public $montant ;
+    public $montant;
     public $activeYear;
-
+    public $montantDejaPayé = 0;
+    public $montantRestant = 0;
 
     public function render()
     {
-
         $this->activeYear = SchoolYear::where('active', '1')->first();
 
-        //charger les niveuaux qui appartiennent à l'année en cour
-
         if(isset($this->matricule)){
-            $currentStudent = Student::where('matricule', 'LIKE' ,  '%' .$this->matricule. "%")->first();
+            $currentStudent = Student::where('matricule', 'LIKE', '%' . $this->matricule . "%")->first();
 
            if($currentStudent){
-                $this->nom = $currentStudent->nom. " " .$currentStudent->prenom;
+                $this->nom = $currentStudent->nom . " " . $currentStudent->prenom;
                 $this->student_id = $currentStudent->id;
-                $currentIns = Attributtion::where('student_id', $this->student_id)->where('school_year_id', $this->activeYear->id)->first();
+                
+                // Vérifier si l'élève est inscrit pour l'année scolaire active
+                $currentIns = Attributtion::where('student_id', $this->student_id)
+                    ->where('school_year_id', $this->activeYear->id)
+                    ->first();
                 
                 if($currentIns) {
-                    $currentClass = Classe::whereHas('level', function($query) use ($currentIns){
-                        $query->where('school_year_id', $currentIns->school_year_id);
-                    })->first();
+                    // Récupérer directement la classe à partir de l'attribution
+                    $currentClass = Classe::find($currentIns->classe_id);
                     
                     if($currentClass) {
-                        $currentLevel = Level::where('id', $currentClass->level_id)->first();
+                        // Récupérer le niveau de la classe
+                        $currentLevel = Level::find($currentClass->level_id);
+                        
                         if($currentLevel) {
                             $this->currentLevelAmount = $currentLevel->scolarite;
                             $this->classe_id = $currentClass->id;
+                            $this->level_id = $currentLevel->id;
+                            
+                            // Calculer le montant déjà payé par l'élève pour cette année scolaire
+                            $this->montantDejaPayé = Payment::where('student_id', $this->student_id)
+                                ->where('school_year_id', $this->activeYear->id)
+                                ->sum('montant');
+                                
+                            // Calculer le montant restant à payer
+                            $this->montantRestant = max(0, $this->currentLevelAmount - $this->montantDejaPayé);
+                            
+                            // Si l'élève a déjà tout payé
+                            if ($this->montantRestant <= 0) {
+                                $this->nom = $currentStudent->nom . " " . $currentStudent->prenom . " (Scolarité déjà entièrement payée)";
+                            }
                         } else {
                             $this->nom = "Aucun niveau trouvé pour cet élève dans l'année scolaire actuelle.";
                         }
@@ -61,45 +79,71 @@ class CreatePaiement extends Component
                 $this->nom = "Ce matricule n'est lié à aucun élève, vérifier votre matricule et réessayez svp !";
            }
         } else {
-            $this->nom ="";
+            $this->nom = "";
         }
 
         return view('livewire.create-paiement');
     }
 
-
     public function store(Payment $payment){
-
         $this->validate([
-            "montant"=>'integer|required|between:1,500000',
-           ]);
+            "montant" => "integer|required|min:1|max:{$this->montantRestant}",
+            "student_id" => 'required',
+            "classe_id" => 'required',
+        ], [
+            "student_id.required" => "Aucun élève sélectionné. Veuillez entrer un matricule valide.",
+            "classe_id.required" => "Aucune classe trouvée pour cet élève.",
+            "montant.required" => "Le montant est requis.",
+            "montant.integer" => "Le montant doit être un nombre entier.",
+            "montant.min" => "Le montant doit être supérieur à 0.",
+            "montant.max" => "Le montant ne peut pas dépasser le reste à payer ({$this->montantRestant} FCFA).",
+        ]);
 
-       try{
-                 $payment->student_id = $this->student_id;
-                 $payment->school_year_id = $this->activeYear->id;
-                 $payment->classe_id = $this->classe_id;
-                 $payment->montant = $this->montant;
-                 $payment->reste = $this->currentLevelAmount - $this->montant;
-                 if($payment->reste < 0){
-                 $payment->reste = 0;
-                 }
-                 if($payment->reste <= 0){
-                 $payment->solvable = '1';
-                 }else{
-                 $payment->solvable = '0';
-                 }
-                $payment->save();
-                return redirect()->route('paiements')->with('success', "paiement  réussi avec success , veillez vérifier si toutes les information sont correctes");
-                 if($payment){
-                 $this->nom ='';
-                 $this->level_id = "";
-                 $this->classe_id ='';
-                 $this->matricule = "";
-                 }
-       }catch(Exception $e){
-         dd($e);
-         return ($e);
-       }
-
-     }
+        try {
+            // Vérifier si l'élève est inscrit pour l'année active
+            $inscription = Attributtion::where('student_id', $this->student_id)
+                ->where('school_year_id', $this->activeYear->id)
+                ->first();
+                
+            if (!$inscription) {
+                session()->flash('error', "Cet élève n'est pas inscrit pour l'année scolaire actuelle.");
+                return;
+            }
+            
+            // Vérifier si le montant ne dépasse pas le reste à payer
+            if ($this->montant > $this->montantRestant) {
+                session()->flash('error', "Le montant du paiement ({$this->montant} FCFA) ne peut pas dépasser le reste à payer ({$this->montantRestant} FCFA).");
+                return;
+            }
+            
+            // Créer le paiement
+            $payment->student_id = $this->student_id;
+            $payment->school_year_id = $this->activeYear->id;
+            $payment->classe_id = $this->classe_id;
+            $payment->montant = $this->montant;
+            
+            // Calculer le nouveau reste à payer après ce paiement
+            $nouveauMontantRestant = $this->montantRestant - $this->montant;
+            $payment->reste = $nouveauMontantRestant;
+            
+            // Déterminer si l'élève est solvable
+            if ($nouveauMontantRestant <= 0) {
+                $payment->solvable = '1';
+            } else {
+                $payment->solvable = '0';
+            }
+            
+            $payment->save();
+            
+            // Réinitialiser les champs après l'enregistrement
+            $this->reset(['nom', 'level_id', 'classe_id', 'matricule', 'montant', 'montantDejaPayé', 'montantRestant']);
+            
+            // Émettre un événement pour rafraîchir le tableau de bord
+            $this->dispatch('refresh-dashboard');
+            
+            return redirect()->route('paiements')->with('success', "Paiement enregistré avec succès pour l'élève.");
+        } catch (Exception $e) {
+            return redirect()->route('paiements.create_paiement')->with('error', "Erreur lors de l'enregistrement du paiement: " . $e->getMessage());
+        }
+    }
 }

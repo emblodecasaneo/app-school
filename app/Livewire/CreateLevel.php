@@ -23,10 +23,11 @@ class CreateLevel extends Component
        ]);
 
       try{
-
+                // Récupérer l'année active pour le code uniquement
                 $this->activeYear = SchoolYear::where('active', '1')->first();
                 $level->libelle = $this->libelle;
-                $level->school_year_id = $this->activeYear->id;
+                // Ne pas associer le niveau à une année scolaire spécifique
+                // $level->school_year_id = $this->activeYear->id;
                 $level->code = $this->code . "" .$this->activeYear->curent_year;
                 $level->scolarite = $this->scolarite;
                 $level->save();

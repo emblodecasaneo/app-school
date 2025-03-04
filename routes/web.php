@@ -8,6 +8,13 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SchoolYearController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\GradeManagement;
+use App\Livewire\NiveauxManagement;
+use App\Livewire\ClassesManagement;
+use App\Livewire\Dashboard;
+use App\Livewire\Inscriptions;
+use App\Livewire\Students;
+use App\Livewire\Paiements;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +86,50 @@ Route::middleware([
         })->name('settings.progression');
     });
 
+    // Route pour la progression des élèves
+    Route::get('/progression', function () {
+        return view('progression');
+    })->name('progression');
+
+    Route::get('/grades', App\Livewire\GradeManagement::class)->name('grades.management');
+});
+
+// Routes accessibles uniquement aux non-intendants
+Route::middleware(['auth', 'role:admin,teacher'])->group(function () {
+    Route::get('/grades/management', GradeManagement::class)->name('grades.management');
+    Route::get('/niveaux', [LevelController::class, 'index'])->name('niveaux');
+    Route::get('/classes', [ClasseController::class, 'index'])->name('classes');
+    Route::get('/averages', function () {
+        return view('averages.index');
+    })->name('averages');
+});
+
+// Routes accessibles uniquement aux intendants
+Route::middleware(['auth', 'role:intendant,admin'])->group(function () {
+    Route::prefix('paiements')->group(function(){
+        Route::get('/', [PaymentController::class, 'index'])->name('paiements');
+        Route::get('/create_paiement', [PaymentController::class, 'create'])->name('paiements.create_paiement');
+        Route::get('/update_paiement/{paiements}', [PaymentController::class, 'edit'])->name('paiements.update_paiements');
+    });
+});
+
+// Routes accessibles à tous les utilisateurs authentifiés
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+    
+    Route::get('/students', [StudentController::class, 'index'])->name('students');
+    Route::get('/inscriptions', [StudentController::class, 'inscriptions'])->name('inscriptions');
+    
+    Route::prefix('settings')->group(function(){
+        Route::get('/', [SchoolYearController::class, 'index'])->name('settings');
+        Route::get('/create_school_year', [SchoolYearController::class, 'create'])->name('settings.create_schoolyear');
+        Route::get('/progression', function() {
+            return view('settings.progression');
+        })->name('settings.progression');
+    });
+    
     // Route pour la progression des élèves
     Route::get('/progression', function () {
         return view('progression');

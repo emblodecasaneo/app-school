@@ -45,11 +45,10 @@ class CreateClasses extends Component
     public function render()
     {
         //recupere l'année encours
-
         $activeYear = SchoolYear::where('active', '1')->first();
 
-        //charger les niveuaux qui appartiennent à l'année en cour
-        $getAllLevels = Level::where('school_year_id', $activeYear->id)->get();
+        //charger tous les niveaux sans filtrer par année scolaire
+        $getAllLevels = Level::all();
         return view('livewire.create-classes', compact('getAllLevels'));
     }
 }
