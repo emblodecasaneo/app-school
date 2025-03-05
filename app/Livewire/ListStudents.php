@@ -113,6 +113,9 @@ class ListStudents extends Component
                 if ($attribution) {
                     $student->is_inscribed = true;
                     
+                    // Récupérer la date d'inscription
+                    $student->inscription_date = $attribution->created_at;
+                    
                     // Vérifier si la classe existe et a un nom
                     if ($attribution->classe) {
                         $student->current_class = $attribution->classe->libelle;

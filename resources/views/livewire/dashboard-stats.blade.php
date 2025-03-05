@@ -435,9 +435,6 @@
             </div>
             
             <!-- Graphique des moyennes par période -->
-            <div class="mt-4 h-56">
-                <canvas id="academicPerformanceChart"></canvas>
-            </div>
         </div>
         
         <!-- Performance par niveau -->
@@ -478,9 +475,6 @@
                 </div>
                 
                 <!-- Graphique des performances par niveau -->
-                <div class="mt-4 h-56">
-                    <canvas id="levelPerformanceChart"></canvas>
-                </div>
             @else
                 <div class="text-center py-8 text-gray-500">
                     Aucune donnée de performance par niveau disponible.

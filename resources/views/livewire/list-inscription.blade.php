@@ -68,7 +68,7 @@
                         <tbody>
                             @forelse ($inscriptionList as $item)
                                 <tr class="border-b-2">
-                                    <td class="text-sm font-medium text-gray-900 px-4 py-4">{{ $item->id }}</td>
+                                    <td class="text-sm font-medium text-gray-900 px-4 py-4">#{{ $item->id }}</td>
                                     <td class="text-sm font-medium text-gray-900 px-4 py-4">{{ $item->student->matricule }}</td>
                                     <td class="text-sm font-medium text-gray-900 px-4 py-4">{{ $item->student->nom }}</td>
                                     <td class="text-sm font-medium text-gray-900 px-4 py-4">{{ $item->student->prenom }}</td>

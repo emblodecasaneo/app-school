@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-5 sm:px-6 lg:px-3">
             @livewire('student-details', ['studentId' => $studentId])
         </div>
     </div>

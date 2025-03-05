@@ -96,12 +96,21 @@ Route::middleware([
 
 // Routes accessibles uniquement aux non-intendants
 Route::middleware(['auth', 'role:admin,teacher'])->group(function () {
-    Route::get('/grades/management', GradeManagement::class)->name('grades.management');
     Route::get('/niveaux', [LevelController::class, 'index'])->name('niveaux');
     Route::get('/classes', [ClasseController::class, 'index'])->name('classes');
     Route::get('/averages', function () {
         return view('averages.index');
     })->name('averages');
+    
+    // Route pour les bulletins scolaires
+    Route::get('/report-cards', function () {
+        return view('report-cards.index');
+    })->name('report-cards');
+    
+    // Route pour la gestion des notes
+    Route::get('/grades', function () {
+        return view('grades.index');
+    })->name('grades');
 });
 
 // Routes accessibles uniquement aux intendants
@@ -135,3 +144,19 @@ Route::middleware(['auth'])->group(function () {
         return view('progression');
     })->name('progression');
 });
+
+// Route pour la gestion des utilisateurs (accessible uniquement aux administrateurs)
+Route::middleware(['auth:sanctum', 'verified', 'admin'])->get('/settings/users', function () {
+    return view('settings.users');
+})->name('settings.users');
+
+// Add these new routes
+// Route pour la gestion des utilisateurs
+Route::middleware(['auth'])->get('/users', function () {
+    return view('settings.users');
+})->name('users');
+
+// Route pour la progression des élèves
+Route::middleware(['auth'])->get('/student-progress', function () {
+    return view('settings.progression');
+})->name('student-progress');

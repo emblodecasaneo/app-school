@@ -13,14 +13,14 @@ class SchoolYear extends Model
 
 
     public function levels(){
-        return $this->HasMany(Level::class);
+        return $this->hasMany(Level::class);
     }
 
     public function attributions(){
-        return $this->HasMany(Attributtion::class);
+        return $this->hasMany(Attributtion::class);
     }
 
     public function payments(){
-        return $this->HasMany(Classe::class);
+        return $this->hasMany(Payment::class);
     }
 }

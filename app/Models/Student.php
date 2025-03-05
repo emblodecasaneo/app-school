@@ -25,6 +25,21 @@ class Student extends Model
         return $this->hasMany(Attributtion::class);
     }
 
+    // Ajout de l'alias attributions pour la compatibilité
+    public function attributions(){
+        return $this->attributtions();
+    }
+
+    // Relation avec la classe actuelle de l'élève
+    public function classe()
+    {
+        // Nous devons retourner une relation belongsTo
+        // Nous allons utiliser une approche différente en utilisant une relation via l'attribution
+        return $this->belongsToMany(Classe::class, 'attributtions', 'student_id', 'classe_id')
+            ->withPivot('school_year_id')
+            ->wherePivot('school_year_id', SchoolYear::where('active', '1')->first()->id ?? 0);
+    }
+
     public function payments(){
         return $this->hasMany(Payment::class);
     }

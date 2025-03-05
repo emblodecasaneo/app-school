@@ -141,10 +141,10 @@
                                     <th class="text-sm font-semibold px-4 py-3">Matricule</th>
                                     <th class="text-sm font-semibold px-4 py-3">Nom</th>
                                     <th class="text-sm font-semibold px-4 py-3">Prénom</th>
-                                    <th class="text-sm font-semibold px-4 py-3">Sexe</th>
-                                    <th class="text-sm font-semibold px-4 py-3">Date de naissance</th>
-                                    <th class="text-sm font-semibold px-4 py-3">Contact du parent</th>
+                                    <th class="text-sm font-semibold px-4 text-center py-3">Sexe</th>
+                                    <th class="text-sm font-semibold px-4 text-center py-3">Parent</th>
                                     <th class="text-sm font-semibold px-4 py-3">Classe</th>
+                                    <th class="text-sm font-semibold px-4 py-3">Date d'inscription</th>
                                     <th class="text-sm font-semibold px-4 py-3">Solvabilité</th>
                                     <th class="text-sm font-semibold px-4 py-3">Actions</th>
                                 </tr>
@@ -152,7 +152,7 @@
                             <tbody>
                                 @forelse ($students as $item)
                                     <tr class="border-b hover:bg-gray-50 transition-colors {{ !$item->is_solvable && $item->is_inscribed ? 'bg-red-50' : '' }}">
-                                        <td class="text-sm text-gray-900 px-4 py-3">{{ $item->id }}</td>
+                                        <td class="text-sm text-gray-900 px-4 py-3">#{{ $item->id }}</td>
                                         <td class="text-sm text-gray-900 px-4 py-3">
                                             <span class="font-medium">{{ $item->matricule }}</span>
                                         </td>
@@ -162,7 +162,7 @@
                                         <td class="text-sm text-gray-900 px-4 py-3">
                                             {{ $item->prenom }}
                                         </td>
-                                        <td class="text-sm text-gray-900 px-4 py-3">
+                                        <td class="text-sm text-center text-gray-900 px-4 py-3">
                                             @if ($item->sexe === 'F')
                                                 <span class="inline-flex items-center px-2 py-1 rounded-full bg-pink-100 text-pink-800 text-xs">
                                                     <i class="fas fa-female mr-1"></i> Féminin
@@ -173,28 +173,30 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="text-sm text-gray-900 px-4 py-3">
-                                            <i class="far fa-calendar-alt text-gray-500 mr-1"></i> {{ $item->naissance }}
-                                        </td>
-                                        <td class="text-sm text-gray-900 px-4 py-3">
+                                        <td class="text-sm text-center text-gray-900 px-4 py-3">
                                             <a href="tel:{{ $item->contact_parent }}" class="text-blue-600 hover:text-blue-800 transition-colors">
                                                 <i class="fas fa-phone-alt text-gray-500 mr-1"></i> {{ $item->contact_parent }}
                                             </a>
                                         </td>
                                         <td class="text-sm text-gray-900 px-4 py-3">
-                                            @if($activeYear)
-                                                @if($item->is_inscribed)
-                                                    <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                        <i class="fas fa-check-circle mr-1"></i> {{ $item->current_class }}
-                                                    </span>
-                                                @else
-                                                    <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                        <i class="fas fa-times-circle mr-1"></i> Non inscrit
-                                                    </span>
-                                                @endif
+                                            @if ($item->is_inscribed)
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs">
+                                                    <i class="fas fa-graduation-cap mr-1"></i> {{ $item->current_class }}
+                                                </span>
                                             @else
-                                                <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    <i class="fas fa-question-circle mr-1"></i> Indéterminé
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs">
+                                                    <i class="fas fa-times-circle mr-1"></i> Non inscrit
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="text-sm text-gray-900 px-4 py-3">
+                                            @if ($item->is_inscribed && isset($item->inscription_date))
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs">
+                                                    <i class="fas fa-calendar-check mr-1"></i> {{ $item->inscription_date->format('d/m/Y') }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs">
+                                                    <i class="fas fa-calendar-times mr-1"></i> Non disponible
                                                 </span>
                                             @endif
                                         </td>
@@ -206,7 +208,7 @@
                                                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                                             <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                                                         </span>
-                                                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 rounded-full bg-green-100 text-green-800">
                                                             <i class="fas fa-money-bill-wave mr-1"></i> Solvable
                                                         </span>
                                                     </div>
@@ -218,21 +220,27 @@
                                                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                                             <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                                                         </span>
-                                                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 rounded-full bg-red-100 text-red-800">
                                                             <i class="fas fa-exclamation-triangle mr-1"></i> Insolvable
                                                         </span>
                                                     </div>
-                                                    <div class="mt-1 text-xs {{ $item->remaining_amount > 0 ? 'text-orange-500 font-medium' : 'text-gray-500' }}">
+                                                    <div class="mt-1 text-xs text-center {{ $item->remaining_amount > 0 ? 'text-orange-500 font-medium' : 'text-gray-500' }}">
                                                         <i class="fas fa-money-bill-alt mr-1"></i> Reste: {{ number_format($item->remaining_amount, 0, ',', ' ') }} FCFA
                                                     </div>
                                                 @endif
                                             @else
-                                                <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    <i class="fas fa-minus-circle mr-1"></i> aucn statut
+                                            <div class="flex items-center">
+                                                <span class="relative flex h-3 w-3 mr-2">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-900 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-gray-900"></span>
                                                 </span>
+                                                <span class="px-2 py-1 inline-flex items-center text-xs leading-5 rounded-full bg-gray-400 text-white">
+                                                    <i class="fas fa-exclamation-triangle mr-1"></i> Non inscrit
+                                                </span>
+                                            </div>
                                             @endif
                                         </td>
-                                        <td class="text-sm text-gray-900 px-4 py-3">
+                                        <td class="text-sm text-gray-900 text-center px-4 py-3">
                                             <div class="relative" x-data="{ open: false }">
                                                 <button @click="open = !open" @click.away="open = false" 
                                                     class="text-blue-700 hover:text-blue-900 transition-colors p-1 flex items-center justify-center"
