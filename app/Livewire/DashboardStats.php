@@ -192,7 +192,7 @@ class DashboardStats extends Component
         // Récents paiements
         $this->recentPayments = Payment::where('school_year_id', $this->activeYear->id)
             ->orderBy('created_at', 'desc')
-            ->take(10)
+            ->take(15)
             ->get();
         
         // Élèves avec paiements en retard (non solvables)

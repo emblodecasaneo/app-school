@@ -13,18 +13,19 @@ class GradeCalculationService
 {
     /**
      * Calcule la moyenne d'un élève pour une matière, une période et une année scolaire données
+     * en utilisant le coefficient spécifique à la classe pour cette matière
      *
      * @param int $studentId
-     * @param string $subject
+     * @param int $subjectId
      * @param string $period
      * @param int $schoolYearId
      * @param int|null $classeId
      * @return float|null
      */
-    public function calculateSubjectAverage(int $studentId, string $subject, string $period, int $schoolYearId, ?int $classeId = null): ?float
+    public function calculateSubjectAverage(int $studentId, int $subjectId, string $period, int $schoolYearId, ?int $classeId = null): ?float
     {
         $query = Grade::where('student_id', $studentId)
-            ->where('subject', $subject)
+            ->where('subject_id', $subjectId)
             ->where('period', $period)
             ->where('school_year_id', $schoolYearId);
             
@@ -42,8 +43,10 @@ class GradeCalculationService
         $totalCoefficient = 0;
         
         foreach ($grades as $grade) {
-            $totalWeightedValue += $grade->value * $grade->coefficient;
-            $totalCoefficient += $grade->coefficient;
+            // Utiliser le coefficient effectif qui prend en compte le coefficient de la matière pour la classe
+            $gradeCoefficient = $grade->coefficient;
+            $totalWeightedValue += $grade->value * $gradeCoefficient;
+            $totalCoefficient += $gradeCoefficient;
         }
         
         if ($totalCoefficient === 0) {
@@ -55,6 +58,7 @@ class GradeCalculationService
     
     /**
      * Calcule la moyenne générale d'un élève pour une période et une année scolaire données
+     * en utilisant les coefficients spécifiques à la classe pour chaque matière
      *
      * @param int $studentId
      * @param string $period
@@ -64,37 +68,79 @@ class GradeCalculationService
      */
     public function calculatePeriodAverage(int $studentId, string $period, int $schoolYearId, ?int $classeId = null): ?float
     {
-        $query = Grade::where('student_id', $studentId)
-            ->where('period', $period)
-            ->where('school_year_id', $schoolYearId);
-            
-        if ($classeId) {
-            $query->where('classe_id', $classeId);
-        }
-        
-        // Récupérer toutes les matières distinctes pour cet élève dans cette période
-        $subjects = $query->distinct('subject')->pluck('subject');
-        
-        if ($subjects->isEmpty()) {
-            return null;
-        }
-        
-        $subjectAverages = [];
-        
-        // Calculer la moyenne pour chaque matière
-        foreach ($subjects as $subject) {
-            $average = $this->calculateSubjectAverage($studentId, $subject, $period, $schoolYearId, $classeId);
-            if ($average !== null) {
-                $subjectAverages[] = $average;
+        // Vérifier si la classe est spécifiée
+        if (!$classeId) {
+            // Trouver la classe de l'élève pour cette année scolaire
+            $attribution = \App\Models\Attributtion::where('student_id', $studentId)
+                ->where('school_year_id', $schoolYearId)
+                ->first();
+                
+            if ($attribution) {
+                $classeId = $attribution->classe_id;
+            } else {
+                return null; // Impossible de calculer la moyenne sans classe
             }
         }
         
-        if (empty($subjectAverages)) {
+        // Récupérer la classe et ses matières
+        $classe = \App\Models\Classe::find($classeId);
+        if (!$classe) {
             return null;
         }
         
-        // Calculer la moyenne générale (moyenne des moyennes par matière)
-        return round(array_sum($subjectAverages) / count($subjectAverages), 2);
+        // Récupérer toutes les matières actives associées à la classe
+        $allSubjects = $classe->getActiveSubjects();
+        if ($allSubjects->isEmpty()) {
+            return null; // Pas de matières associées à cette classe
+        }
+        
+        // Récupérer les notes de l'élève pour cette période
+        $grades = Grade::where('student_id', $studentId)
+            ->where('period', $period)
+            ->where('school_year_id', $schoolYearId)
+            ->where('classe_id', $classeId)
+            ->get()
+            ->groupBy('subject_id');
+        
+        $totalWeightedValue = 0;
+        $totalCoefficient = 0;
+        $subjectCount = 0;
+        
+        // Calculer la moyenne pour chaque matière
+        foreach ($allSubjects as $subject) {
+            $subjectId = $subject->id;
+            // Récupérer le coefficient de la matière depuis la relation pivot
+            $subjectCoefficient = $subject->pivot->coefficient ?? 1;
+            
+            // Vérifier si l'élève a des notes pour cette matière
+            if ($grades->has($subjectId)) {
+                $subjectGrades = $grades[$subjectId];
+                $totalSubjectValue = 0;
+                $totalSubjectCoefficient = 0;
+                
+                foreach ($subjectGrades as $grade) {
+                    // Utiliser le coefficient de la note
+                    $gradeCoefficient = $grade->coefficient;
+                    $totalSubjectValue += $grade->value * $gradeCoefficient;
+                    $totalSubjectCoefficient += $gradeCoefficient;
+                }
+                
+                if ($totalSubjectCoefficient > 0) {
+                    $subjectAverage = $totalSubjectValue / $totalSubjectCoefficient;
+                    // Utiliser le coefficient de la matière pour la classe
+                    $totalWeightedValue += $subjectAverage * $subjectCoefficient;
+                    $totalCoefficient += $subjectCoefficient;
+                    $subjectCount++;
+                }
+            }
+        }
+        
+        // Retourner la moyenne générale si des notes ont été trouvées
+        if ($totalCoefficient > 0) {
+            return round($totalWeightedValue / $totalCoefficient, 2);
+        }
+        
+        return null;
     }
     
     /**

@@ -105,23 +105,42 @@ class StudentDetails extends Component
         // Construire l'historique académique
         $this->academicHistory = [];
         foreach ($this->attributions as $attribution) {
-            if (isset($attribution['classe']) && isset($attribution['schoolyear'])) {
+            // Vérifier que les données nécessaires sont présentes
+            if (isset($attribution['classe'])) {
+                // Récupérer les paiements pour cette année scolaire
                 $yearPayments = $payments
                     ->where('school_year_id', $attribution['school_year_id'])
                     ->sum('montant');
                     
-                $levelScolarite = $attribution['classe']['level']['scolarite'] ?? 0;
+                // Récupérer la scolarité du niveau (avec valeur par défaut si non disponible)
+                $levelScolarite = isset($attribution['classe']['level']) ? ($attribution['classe']['level']['scolarite'] ?? 0) : 0;
                 
+                // Récupérer l'année scolaire (avec valeur par défaut si non disponible)
+                $schoolYear = 'N/A';
+                $isActive = false;
+                
+                if (isset($attribution['schoolyear'])) {
+                    $schoolYear = $attribution['schoolyear']['school_year'] ?? 'N/A';
+                    $isActive = ($attribution['schoolyear']['active'] ?? '0') == '1';
+                } elseif (isset($attribution['school_year_id'])) {
+                    // Essayer de récupérer l'année scolaire directement
+                    $schoolYearObj = SchoolYear::find($attribution['school_year_id']);
+                    if ($schoolYearObj) {
+                        $schoolYear = $schoolYearObj->school_year;
+                        $isActive = $schoolYearObj->active == '1';
+                    }
+                }
+                
+                // Construire l'entrée d'historique
                 $this->academicHistory[] = [
-                    'year' => $attribution['schoolyear']['school_year'],
-                    'classe' => $attribution['classe']['libelle'],
-                    'level' => $attribution['classe']['level']['libelle'] ?? 'N/A',
+                    'year' => $schoolYear,
+                    'classe' => $attribution['classe']['libelle'] ?? 'N/A',
+                    'level' => isset($attribution['classe']['level']) ? ($attribution['classe']['level']['libelle'] ?? 'N/A') : 'N/A',
                     'scolarite' => $levelScolarite,
                     'paid' => $yearPayments,
                     'status' => $yearPayments >= $levelScolarite ? 'Soldé' : 'Non soldé',
-                    'is_active' => $attribution['schoolyear']['active'] == '1'
+                    'is_active' => $isActive
                 ];
-
             }
         }
     }

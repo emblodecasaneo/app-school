@@ -15,6 +15,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Inscriptions;
 use App\Livewire\Students;
 use App\Livewire\Paiements;
+use App\Http\Controllers\PaymentReceiptController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,9 @@ Route::middleware([
         Route::get('/', [ClasseController::class, 'index'])->name('classes');
         Route::get('/create_classe', [ClasseController::class, 'create'])->name('classes.create_level');
         Route::get('/update_classe/{classe}', [ClasseController::class, 'edit'])->name('classes.update_classe');
+        Route::get('/students/{classe}', function($classe) {
+            return view('classes.students', ['classeId' => $classe]);
+        })->name('classes.students');
     });
 
 
@@ -75,7 +79,8 @@ Route::middleware([
         Route::get('/', [PaymentController::class, 'index'])->name('paiements');
         Route::get('/create_paiement', [PaymentController::class, 'create'])->name('paiements.create_paiement');
         Route::get('/update_paiement/{paiements}', [PaymentController::class, 'edit'])->name('paiements.update_paiements');
-
+        Route::get('/receipt/{payment}', [PaymentReceiptController::class, 'show'])->name('paiements.receipt');
+        Route::get('/receipt-pdf/{payment}', [PaymentReceiptController::class, 'generatePdf'])->name('paiements.receipt-pdf');
     });
 
     Route::prefix('settings')->group(function(){
@@ -111,6 +116,23 @@ Route::middleware(['auth', 'role:admin,teacher'])->group(function () {
     Route::get('/grades', function () {
         return view('grades.index');
     })->name('grades');
+
+    // Route pour la gestion des matières
+    Route::get('/subjects', function () {
+        return view('subjects.index');
+    })->name('subjects');
+    
+    // Route pour la gestion des coefficients
+    Route::get('/coefficients', function () {
+        return view('coefficients.index');
+    })->name('coefficients');
+    
+    // Routes pour la gestion des matières et des coefficients
+    Route::prefix('api/subjects')->group(function(){
+        Route::post('/attach-to-class', [App\Http\Controllers\SubjectController::class, 'attachToClass'])->name('subjects.attach-to-class');
+        Route::post('/update-coefficient', [App\Http\Controllers\SubjectController::class, 'updateCoefficient'])->name('subjects.update-coefficient');
+        Route::get('/get-coefficient', [App\Http\Controllers\SubjectController::class, 'getCoefficient'])->name('subjects.get-coefficient');
+    });
 });
 
 // Routes accessibles uniquement aux intendants

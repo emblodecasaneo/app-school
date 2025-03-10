@@ -375,7 +375,7 @@
             
             <!-- Graphique de projection des revenus -->
             <div class="h-56">
-                <canvas id="revenueProjectionChart"></canvas>
+                <canvas draggable="true" id="revenueProjectionChart"></canvas>
             </div>
         </div>
     </div>

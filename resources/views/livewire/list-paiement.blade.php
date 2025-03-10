@@ -1,4 +1,20 @@
 <div class="mt-4">
+    <style>
+        /* Styles pour le menu déroulant */
+        .dropdown-menu {
+            transform-origin: top right;
+        }
+        .dropdown-item {
+            transition: all 0.2s;
+        }
+        .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+        .dropdown-item:active {
+            background-color: #e5e7eb;
+        }
+    </style>
+    
     <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
         <!-- En-tête avec titre et statistiques -->
         <div class="mb-6">
@@ -131,22 +147,59 @@
                                 {{ $item->created_at->format('d/m/Y') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center justify-end space-x-2">
-                                    <a href="{{ route('students.details', ['studentId' => $item->student_id]) }}" 
-                                       class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-full transition-colors" 
-                                       title="Voir détails">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </a>
-                                    <button wire:click="confirmingAttributtionDeletion({{$item}})" 
-                                            class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors" 
-                                            title="Supprimer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                <div class="relative" x-data="{ open: false }">
+                                    <button @click="open = !open" @click.away="open = false" 
+                                            class="bg-indigo-50 hover:bg-indigo-100 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" 
+                                            title="Actions">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                                         </svg>
                                     </button>
+                                    
+                                    <div x-show="open" 
+                                         x-transition:enter="transition ease-out duration-100" 
+                                         x-transition:enter-start="transform opacity-0 scale-95" 
+                                         x-transition:enter-end="transform opacity-100 scale-100" 
+                                         x-transition:leave="transition ease-in duration-75" 
+                                         x-transition:leave-start="transform opacity-100 scale-100" 
+                                         x-transition:leave-end="transform opacity-0 scale-95" 
+                                         class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200 dropdown-menu"
+                                         style="display: none;">
+                                        <div class="py-1">
+                                            <a href="{{ route('students.details', $item->student_id) }}" 
+                                               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dropdown-item">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                                </svg>
+                                                Voir détails de l'élève
+                                            </a>
+                                            
+                                            <a href="{{ route('paiements.receipt', ['payment' => $item->id]) }}" 
+                                               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dropdown-item" target="_blank">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                                                </svg>
+                                                Imprimer reçu
+                                            </a>
+                                            
+                                            <a href="{{ route('paiements.receipt-pdf', ['payment' => $item->id]) }}" 
+                                               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dropdown-item" target="_blank">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                                Télécharger PDF
+                                            </a>
+                                            
+                                            <button wire:click="confirmingAttributtionDeletion({{$item}})" 
+                                                    class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dropdown-item">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                </svg>
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

@@ -15,6 +15,8 @@ class StudentReportCard extends Component
 {
     use WithPagination;
     
+    protected $paginationTheme = 'tailwind';
+    
     public $search = '';
     public $selectedStudent = null;
     public $selectedClasse = '';
@@ -34,6 +36,21 @@ class StudentReportCard extends Component
     
     protected $gradeService;
     
+    protected $listeners = [
+        'refresh' => '$refresh'
+    ];
+    
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'selectedClasse' => ['except' => ''],
+        'selectedPeriod' => ['except' => 'Trimestre 1'],
+    ];
+    
+    protected $rules = [
+        'teacherComment' => 'nullable|string|max:500',
+        'decision' => 'nullable|string|max:100',
+    ];
+    
     public function boot(GradeCalculationService $gradeService)
     {
         $this->gradeService = $gradeService;
@@ -47,6 +64,8 @@ class StudentReportCard extends Component
     public function updatedSearch()
     {
         $this->resetPage();
+        $this->selectedStudent = null;
+        $this->showReportCard = false;
     }
     
     public function updatedSelectedClasse()
@@ -76,167 +95,199 @@ class StudentReportCard extends Component
             return;
         }
         
-        $student = Student::with(['attributions' => function($query) {
-            $query->where('school_year_id', $this->activeYear->id);
-            $query->with('classe');
-        }])->find($this->selectedStudent);
-        
-        if (!$student) {
-            session()->flash('error', 'Élève introuvable.');
-            $this->showReportCard = false;
-            return;
-        }
-        
-        // Récupérer la classe actuelle de l'élève pour l'année active
-        $currentAttribution = $student->attributions->first();
-        if (!$currentAttribution) {
-            session()->flash('error', 'Aucune inscription trouvée pour cet élève dans l\'année active.');
-            $this->showReportCard = false;
-            return;
-        }
-        
-        $classeId = $currentAttribution->classe_id;
-        $classeName = $currentAttribution->classe->libelle ?? 'Classe inconnue';
-        
-        // Récupérer les informations de l'élève
-        $this->studentData = [
-            'id' => $student->id,
-            'name' => $student->nom . ' ' . $student->prenom,
-            'matricule' => $student->matricule,
-            'classe' => $classeName,
-            'classe_id' => $classeId,
-        ];
-        
-        // Récupérer toutes les notes de l'élève pour la période sélectionnée
-        $grades = Grade::where('student_id', $student->id)
-            ->where('school_year_id', $this->activeYear->id)
-            ->where('period', $this->selectedPeriod)
-            ->get()
-            ->groupBy('subject');
-        
-        // Vérifier si toutes les matières ont des notes
-        $classe = Classe::find($classeId);
-        if ($classe) {
-            // Récupérer la liste des matières depuis la méthode subjects()
-            $allSubjects = [];
-            foreach ($classe->subjects() as $subject) {
-                $allSubjects[] = $subject['name'];
+        try {
+            $student = Student::with(['attributions' => function($query) {
+                $query->where('school_year_id', $this->activeYear->id);
+            }])->findOrFail($this->selectedStudent);
+            
+            // Vérifier si l'élève a une attribution pour l'année active
+            if ($student->attributions->isEmpty()) {
+                session()->flash('error', "L'élève n'est pas inscrit pour l'année scolaire active.");
+                $this->showReportCard = false;
+                return;
             }
             
-            $subjectsWithGrades = $grades->keys()->toArray();
-            $subjectsWithoutGrades = array_diff($allSubjects, $subjectsWithGrades);
-            
-            if (!empty($subjectsWithoutGrades) && $this->selectedPeriod !== 'Annuelle') {
-                session()->flash('warning', 'Attention : les matières suivantes n\'ont pas de notes pour la période ' . 
-                    $this->selectedPeriod . ' : ' . implode(', ', $subjectsWithoutGrades));
+            // Récupérer la classe actuelle de l'élève pour l'année active
+            $currentAttribution = $student->attributions->first();
+            if (!$currentAttribution) {
+                session()->flash('error', 'Aucune inscription trouvée pour cet élève dans l\'année active.');
+                $this->showReportCard = false;
+                return;
             }
-        }
-        
-        // Calculer les moyennes par matière
-        $this->subjectAverages = [];
-        
-        // Si la période est "Annuelle", récupérer les moyennes trimestrielles pour chaque matière
-        if ($this->selectedPeriod === 'Annuelle') {
-            // Récupérer les moyennes par matière pour chaque trimestre
-            $trimesterGrades = [];
-            foreach (['Trimestre 1', 'Trimestre 2', 'Trimestre 3'] as $period) {
-                $periodGrades = Grade::where('student_id', $student->id)
-                    ->where('school_year_id', $this->activeYear->id)
-                    ->where('period', $period)
-                    ->get()
-                    ->groupBy('subject');
+            
+            $classeId = $currentAttribution->classe_id;
+            $classeName = $currentAttribution->classe->libelle ?? 'Classe inconnue';
+            
+            // Récupérer les informations de l'élève
+            $this->studentData = [
+                'id' => $student->id,
+                'name' => $student->nom . ' ' . $student->prenom,
+                'matricule' => $student->matricule,
+                'classe' => $classeName,
+                'classe_id' => $classeId,
+            ];
+            
+            // Récupérer toutes les notes de l'élève pour la période sélectionnée
+            $grades = Grade::where('student_id', $student->id)
+                ->where('school_year_id', $this->activeYear->id)
+                ->where('period', $this->selectedPeriod)
+                ->with('subject')
+                ->get()
+                ->groupBy(function($grade) {
+                    return $grade->subject_id;
+                });
+            
+            // Vérifier si toutes les matières ont des notes
+            $classe = Classe::find($classeId);
+            if ($classe) {
+                // Récupérer la liste des matières depuis la méthode getActiveSubjects()
+                $allSubjects = [];
+                $subjectIds = [];
+                $activeSubjects = $classe->getActiveSubjects();
+                foreach ($activeSubjects as $subject) {
+                    $allSubjects[] = $subject->name;
+                    $subjectIds[] = $subject->id;
+                }
                 
-                foreach ($periodGrades as $subject => $grades) {
-                    if (!isset($trimesterGrades[$subject])) {
-                        $trimesterGrades[$subject] = [];
+                $subjectsWithGrades = $grades->keys()->toArray();
+                $subjectsWithoutGradesIds = array_diff($subjectIds, $subjectsWithGrades);
+                
+                // Récupérer les noms des matières sans notes
+                $subjectsWithoutGrades = [];
+                if (!empty($subjectsWithoutGradesIds)) {
+                    foreach ($activeSubjects as $subject) {
+                        if (in_array($subject->id, $subjectsWithoutGradesIds)) {
+                            $subjectsWithoutGrades[] = $subject->name;
+                        }
                     }
+                }
+                
+                if (!empty($subjectsWithoutGrades) && $this->selectedPeriod !== 'Annuelle') {
+                    session()->flash('warning', 'Attention : les matières suivantes n\'ont pas de notes pour la période ' . 
+                        $this->selectedPeriod . ' : ' . implode(', ', $subjectsWithoutGrades));
+                }
+            }
+            
+            // Calculer les moyennes par matière
+            $this->subjectAverages = [];
+            
+            // Si la période est "Annuelle", récupérer les moyennes trimestrielles pour chaque matière
+            if ($this->selectedPeriod === 'Annuelle') {
+                // Récupérer les moyennes par matière pour chaque trimestre
+                $trimesterGrades = [];
+                foreach (['Trimestre 1', 'Trimestre 2', 'Trimestre 3'] as $period) {
+                    $periodGrades = Grade::where('student_id', $student->id)
+                        ->where('school_year_id', $this->activeYear->id)
+                        ->where('period', $period)
+                        ->with('subject')
+                        ->get()
+                        ->groupBy(function($grade) {
+                            return $grade->subject_id;
+                        });
                     
-                    // Calculer la moyenne pour cette matière et ce trimestre
+                    foreach ($periodGrades as $subjectId => $grades) {
+                        if (!isset($trimesterGrades[$subjectId])) {
+                            $trimesterGrades[$subjectId] = [];
+                        }
+                        
+                        // Calculer la moyenne pour cette matière et ce trimestre
+                        $totalWeightedValue = 0;
+                        $totalCoefficient = 0;
+                        
+                        foreach ($grades as $grade) {
+                            $totalWeightedValue += $grade->value * $grade->coefficient;
+                            $totalCoefficient += $grade->coefficient;
+                        }
+                        
+                        if ($totalCoefficient > 0) {
+                            $trimesterGrades[$subjectId][$period] = [
+                                'average' => round($totalWeightedValue / $totalCoefficient, 2),
+                                'coefficient' => $totalCoefficient
+                            ];
+                        }
+                    }
+                }
+                
+                // Calculer la moyenne annuelle pour chaque matière
+                foreach ($trimesterGrades as $subjectId => $periods) {
+                    if (!empty($periods)) {
+                        $totalAverage = 0;
+                        $periodCount = count($periods);
+                        
+                        foreach ($periods as $periodData) {
+                            $totalAverage += $periodData['average'];
+                        }
+                        
+                        $annualAverage = $periodCount > 0 ? round($totalAverage / $periodCount, 2) : null;
+                        
+                        // Utiliser le coefficient du dernier trimestre disponible
+                        $lastPeriod = array_key_last($periods);
+                        $coefficient = $periods[$lastPeriod]['coefficient'] ?? 1;
+                        
+                        // Récupérer l'objet matière
+                        $subject = \App\Models\Subject::find($subjectId);
+                        $subjectName = $subject ? $subject->name : "Matière ID: {$subjectId}";
+                        
+                        $this->subjectAverages[$subjectName] = [
+                            'average' => $annualAverage,
+                            'coefficient' => $coefficient,
+                            'grades' => [],
+                            'trimester_averages' => $periods
+                        ];
+                    }
+                }
+            } else {
+                foreach ($grades as $subjectId => $subjectGrades) {
                     $totalWeightedValue = 0;
                     $totalCoefficient = 0;
                     
-                    foreach ($grades as $grade) {
+                    foreach ($subjectGrades as $grade) {
                         $totalWeightedValue += $grade->value * $grade->coefficient;
                         $totalCoefficient += $grade->coefficient;
                     }
                     
                     if ($totalCoefficient > 0) {
-                        $trimesterGrades[$subject][$period] = [
+                        // Récupérer l'objet matière
+                        $subject = \App\Models\Subject::find($subjectId);
+                        $subjectName = $subject ? $subject->name : "Matière ID: {$subjectId}";
+                        
+                        $this->subjectAverages[$subjectName] = [
                             'average' => round($totalWeightedValue / $totalCoefficient, 2),
-                            'coefficient' => $totalCoefficient
+                            'coefficient' => $totalCoefficient,
+                            'grades' => $subjectGrades->toArray(),
                         ];
                     }
                 }
             }
             
-            // Calculer la moyenne annuelle pour chaque matière
-            foreach ($trimesterGrades as $subject => $periods) {
-                if (!empty($periods)) {
-                    $totalAverage = 0;
-                    $periodCount = count($periods);
-                    
-                    foreach ($periods as $periodData) {
-                        $totalAverage += $periodData['average'];
-                    }
-                    
-                    $annualAverage = $periodCount > 0 ? round($totalAverage / $periodCount, 2) : null;
-                    
-                    // Utiliser le coefficient du dernier trimestre disponible
-                    $lastPeriod = array_key_last($periods);
-                    $coefficient = $periods[$lastPeriod]['coefficient'] ?? 1;
-                    
-                    $this->subjectAverages[$subject] = [
-                        'average' => $annualAverage,
-                        'coefficient' => $coefficient,
-                        'grades' => [],
-                        'trimester_averages' => $periods
-                    ];
-                }
+            // Récupérer la moyenne générale depuis la table des moyennes
+            $average = Average::where('student_id', $student->id)
+                ->where('classe_id', $classeId)
+                ->where('school_year_id', $this->activeYear->id)
+                ->where('period', $this->selectedPeriod)
+                ->first();
+            
+            if ($average) {
+                $this->generalAverage = $average->value;
+                $this->rank = $average->rank;
+                $this->teacherComment = $average->teacher_comment;
+                $this->decision = $average->decision;
+            } else {
+                // Calculer la moyenne générale si elle n'existe pas encore
+                $this->generalAverage = $this->calculateGeneralAverage();
+                $this->rank = null;
+                $this->teacherComment = '';
+                $this->decision = '';
             }
-        } else {
-            foreach ($grades as $subject => $subjectGrades) {
-                $totalWeightedValue = 0;
-                $totalCoefficient = 0;
-                
-                foreach ($subjectGrades as $grade) {
-                    $totalWeightedValue += $grade->value * $grade->coefficient;
-                    $totalCoefficient += $grade->coefficient;
-                }
-                
-                if ($totalCoefficient > 0) {
-                    $this->subjectAverages[$subject] = [
-                        'average' => round($totalWeightedValue / $totalCoefficient, 2),
-                        'coefficient' => $totalCoefficient,
-                        'grades' => $subjectGrades->toArray(),
-                    ];
-                }
-            }
+            
+            // Calculer les statistiques de classe
+            $this->calculateClassStatistics($classeId);
+            
+            $this->showReportCard = true;
+        } catch (\Exception $e) {
+            session()->flash('error', 'Élève introuvable.');
+            $this->showReportCard = false;
         }
-        
-        // Récupérer la moyenne générale depuis la table des moyennes
-        $average = Average::where('student_id', $student->id)
-            ->where('classe_id', $classeId)
-            ->where('school_year_id', $this->activeYear->id)
-            ->where('period', $this->selectedPeriod)
-            ->first();
-        
-        if ($average) {
-            $this->generalAverage = $average->value;
-            $this->rank = $average->rank;
-            $this->teacherComment = $average->teacher_comment;
-            $this->decision = $average->decision;
-        } else {
-            // Calculer la moyenne générale si elle n'existe pas encore
-            $this->generalAverage = $this->calculateGeneralAverage();
-            $this->rank = null;
-            $this->teacherComment = '';
-            $this->decision = '';
-        }
-        
-        // Calculer les statistiques de classe
-        $this->calculateClassStatistics($classeId);
-        
-        $this->showReportCard = true;
     }
     
     private function calculateGeneralAverage()
@@ -413,7 +464,7 @@ class StudentReportCard extends Component
     public function getStudentsProperty()
     {
         if (!$this->activeYear) {
-            return [];
+            return collect([]);
         }
         
         $query = Student::query()
@@ -429,11 +480,12 @@ class StudentReportCard extends Component
                 }
             });
         
-        if ($this->search) {
-            $query->where(function($query) {
-                $query->where('nom', 'like', '%' . $this->search . '%')
-                    ->orWhere('prenom', 'like', '%' . $this->search . '%')
-                    ->orWhere('matricule', 'like', '%' . $this->search . '%');
+        if ($this->search && strlen(trim($this->search)) > 0) {
+            $searchTerm = '%' . trim($this->search) . '%';
+            $query->where(function($query) use ($searchTerm) {
+                $query->where('nom', 'like', $searchTerm)
+                    ->orWhere('prenom', 'like', $searchTerm)
+                    ->orWhere('matricule', 'like', $searchTerm);
             });
         }
         

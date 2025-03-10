@@ -2,7 +2,7 @@
 
 <div x-data="{ open: false }" class="relative inline-block text-left">
     <div>
-        <button @click="open = !open" type="button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-2 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="menu-button-{{ $id }}" aria-expanded="true" aria-haspopup="true">
+        <button @click="open = !open" type="button" class="inline-flex justify-center w-full rounded-full border border-gray-300 shadow-sm px-2 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-0 focus:ring-offset-2 focus:ring-indigo-500/20" id="menu-button-{{ $id }}" aria-expanded="true" aria-haspopup="true">
             <x-icons name="more" class="text-gray-500" />
         </button>
     </div>

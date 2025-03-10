@@ -127,6 +127,8 @@ class ListStudents extends Component
                     
                     // Vérifier la solvabilité (si l'élève a des paiements en retard)
                     // Vérifier s'il existe des paiements marqués comme non solvables pour cet élève
+
+                    
                     $hasPendingPayments = Payment::where('student_id', $student->id)
                         ->where('school_year_id', $this->activeYear->id)
                         ->where('solvable', '0')

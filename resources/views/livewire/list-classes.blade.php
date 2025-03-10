@@ -2,10 +2,10 @@
     <!-- En-tête avec titre et barre de recherche -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-            <h2 class="text-2xl font-poppins-semibold text-gray-800">Gestion des Classes</h2>
+            <h2 class="text-xl font-poppins-semibold text-gray-800">Gestion des Classes</h2>
             @if($activeSchoolYear)
                 <p class="text-sm text-gray-600 mt-1">
-                    <x-icons name="calendar" class="text-indigo-500 mr-1" size="sm" /> Année scolaire active: <span class="font-poppins-medium">{{ $activeSchoolYear->name }}</span>
+                    <x-icons name="calendar" class="text-indigo-500 mr-1" size="sm" /> Année scolaire active: <span class="font-poppins-medium">{{ $activeSchoolYear->school_year }}</span>
                 </p>
             @endif
         </div>
@@ -67,7 +67,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse ($classList as $item)
-                    <tr class="hover:bg-gray-50 transition-colors duration-150">
+                    <tr class="hover:bg-gray-50 transition-colors duration-150 cursor-pointer" onclick="window.location='{{ route('classes.students', $item->id) }}'">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-poppins text-gray-500">{{ $item->id }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-poppins-medium text-gray-900">{{ $item->libelle }}</div>
@@ -85,8 +85,11 @@
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                             {{ $item->created_at->format('d/m/Y') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium" onclick="event.stopPropagation()">
                             <x-action-menu id="class-{{ $item->id }}">
+                                <x-action-menu-item href="{{ route('classes.students', $item->id) }}" icon="student" color="green">
+                                    Voir les élèves
+                                </x-action-menu-item>
                                 <x-action-menu-item href="{{ route('classes.update_classe', $item) }}" icon="edit" color="indigo">
                                     Modifier
                                 </x-action-menu-item>

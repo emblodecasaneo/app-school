@@ -80,7 +80,7 @@
                 @else
                     <div class="space-y-2">
                         @foreach($students as $student)
-                            <div wire:click="selectStudent({{ $student->id }})" class="cursor-pointer p-3 rounded-md hover:bg-indigo-50 transition-colors duration-150 {{ $selectedStudent == $student->id ? 'bg-indigo-100 border-l-4 border-indigo-500' : '' }}">
+                            <div wire:key="student-{{ $student->id }}" wire:click="selectStudent({{ $student->id }})" class="cursor-pointer p-3 rounded-md hover:bg-indigo-50 transition-colors duration-150 {{ $selectedStudent == $student->id ? 'bg-indigo-100 border-l-4 border-indigo-500' : '' }}">
                                 <div class="font-medium">{{ $student->nom }} {{ $student->prenom }}</div>
                                 <div class="text-sm text-gray-500">
                                     <span class="inline-block mr-3">
@@ -89,7 +89,7 @@
                                     <span class="inline-block">
                                         <i class="fas fa-graduation-cap mr-1"></i> 
                                         @if($student->attributions->isNotEmpty())
-                                            {{ $student->attributions->first()->classe->libelle }}
+                                            {{ $student->attributions->first()->classe->libelle ?? 'Classe inconnue' }}
                                         @else
                                             Non inscrit
                                         @endif
@@ -173,7 +173,9 @@
                                         <tbody class="bg-white divide-y divide-gray-200">
                                             @foreach($subjectAverages as $subject => $data)
                                                 <tr>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $subject }}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        {{ $subject }}
+                                                    </td>
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         @if($selectedPeriod === 'Annuelle' && isset($data['trimester_averages']))
                                                             @foreach(['Trimestre 1', 'Trimestre 2', 'Trimestre 3'] as $trimester)

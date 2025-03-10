@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Tableau de bord') }}
+                {{ __('Tableau de bord analytique') }}
             </h2>
             <div class="text-sm text-gray-600">
                 @php

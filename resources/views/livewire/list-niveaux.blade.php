@@ -2,7 +2,7 @@
     <!-- En-tête avec titre et barre de recherche -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-            <h2 class="text-2xl font-poppins-semibold text-gray-800">Gestion des Niveaux</h2>
+            <h2 class="text-xl font-poppins-semibold text-gray-800">Gestion des Niveaux</h2>
             @if($activeSchoolYear)
                 <p class="text-sm text-gray-600 mt-1">
                     <x-icons name="calendar" class="text-indigo-500 mr-1" size="sm" /> Année scolaire active: <span class="font-poppins-medium">{{ $activeSchoolYear->name }}</span>

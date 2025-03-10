@@ -11,7 +11,7 @@
                     @endphp
                     @if ($activeYear)
                         <span class="ml-4 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                            <x-icons name="calendar" class="mr-1 inline" size="xs" /> Année : {{ $activeYear->school_year }}
+                            <x-icons name="calendar" class="mr-1 inline" size="xs" />{{ $activeYear->school_year }}
                         </span>
                     @endif
                 </div>
@@ -25,7 +25,8 @@
                     <!-- Menu déroulant académique pour desktop -->
                     @php
                         $isAcademicActive = request()->routeIs('niveaux') || request()->routeIs('classes') || 
-                                           request()->routeIs('grades') || request()->routeIs('report-cards');
+                                           request()->routeIs('grades') || request()->routeIs('report-cards') ||
+                                           request()->routeIs('subjects') || request()->routeIs('coefficients');
                     @endphp
                     
                     <div class="relative" x-data="{ open: false }">
@@ -50,6 +51,12 @@
                                     </x-dropdown-link>
                                     <x-dropdown-link href="{{ route('grades') }}" :active="request()->routeIs('grades')">
                                         <x-icons name="edit" class="mr-1" size="sm" /> {{ __('Notes') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('subjects') }}" :active="request()->routeIs('subjects')">
+                                        <x-icons name="book" class="mr-1" size="sm" /> {{ __('Matières') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('coefficients') }}" :active="request()->routeIs('coefficients')">
+                                        <x-icons name="calculator" class="mr-1" size="sm" /> {{ __('Coefficients') }}
                                     </x-dropdown-link>
                                     <x-dropdown-link href="{{ route('report-cards') }}" :active="request()->routeIs('report-cards')">
                                         <x-icons name="document" class="mr-1" size="sm" /> {{ __('Bulletins') }}
@@ -98,11 +105,8 @@
                     
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
-                                class="inline-flex items-center px-3 py-2 text-sm font-medium leading-5 {{ $isSettingsActive ? 'bg-indigo-500 text-white' : 'text-black hover:bg-indigo-500' }} focus:outline-none focus:bg-indigo-500 focus:text-white transition duration-150 ease-in-out rounded-md">
-                            <x-icons name="settings" class="mr-1" size="sm" /> {{ __('Paramètres') }}
-                            <svg class="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
+                                class="inline-flex items-center p-2 text-sm font-medium leading-5 {{ $isSettingsActive ? 'bg-indigo-500 text-white' : 'text-black hover:bg-indigo-500' }} focus:outline-none focus:bg-indigo-500 focus:text-white transition duration-150 ease-in-out rounded-full">
+                            <x-icons name="settings" size="sm" />
                         </button>
                         
                         <div x-show="open" 
@@ -113,27 +117,32 @@
                                     <x-icons name="users" class="mr-1" size="sm" /> {{ __('Utilisateurs') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link href="{{ route('student-progress') }}" :active="request()->routeIs('student-progress')">
-                                    <x-icons name="level" class="mr-1" size="sm" /> {{ __('Progression') }}
+                                    <x-icons name="level" class="mr-1" size="sm" /> {{ __('Configuration') }}
                                 </x-dropdown-link>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <div class="hidden sm:flex sm:items-center space-x-4">
+                <!-- Barre de recherche globale -->
+                <div class="relative">
+                    <livewire:global-search />
+                </div>
 
-            <div class="hidden sm:flex sm:items-center">
                 <!-- Settings Dropdown -->
                 <div class="relative">
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                <div>{{ Auth::user()->name }}</div>
-
-                                <div class="ms-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
+                            <button class="inline-flex items-center focus:outline-none transition ease-in-out duration-150">
+                                @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
+                                    <img class="h-10 w-10 rounded-full object-cover" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
+                                @else
+                                    <div class="h-10 w-10 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-800 font-semibold text-lg">
+                                        {{ substr(Auth::user()->name, 0, 1) }}
+                                    </div>
+                                @endif
                             </button>
                         </x-slot>
 
@@ -199,6 +208,12 @@
                         <x-responsive-nav-link href="{{ route('grades') }}" :active="request()->routeIs('grades')">
                             <x-icons name="edit" class="mr-2" size="sm" /> {{ __('Notes') }}
                         </x-responsive-nav-link>
+                        <x-responsive-nav-link href="{{ route('subjects') }}" :active="request()->routeIs('subjects')">
+                            <x-icons name="book" class="mr-2" size="sm" /> {{ __('Matières') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link href="{{ route('coefficients') }}" :active="request()->routeIs('coefficients')">
+                            <x-icons name="calculator" class="mr-2" size="sm" /> {{ __('Coefficients') }}
+                        </x-responsive-nav-link>
                         <x-responsive-nav-link href="{{ route('report-cards') }}" :active="request()->routeIs('report-cards')">
                             <x-icons name="document" class="mr-2" size="sm" /> {{ __('Bulletins') }}
                         </x-responsive-nav-link>
@@ -256,14 +271,26 @@
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+            <div class="px-4 flex items-center">
+                @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
+                    <div class="shrink-0 mr-3">
+                        <img class="h-12 w-12 rounded-full object-cover" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
+                    </div>
+                @else
+                    <div class="shrink-0 mr-3">
+                        <div class="h-12 w-12 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-800 font-semibold text-lg">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    </div>
+                @endif
+                <div>
+                    <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                </div>
             </div>
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link href="{{ route('profile.show') }}" :active="request()->routeIs('profile.show')">
-                    <x-icons name="settings" class="mr-2" size="sm" /> {{ __('Profile') }}
+                    {{ __('Profile') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
@@ -272,7 +299,7 @@
 
                     <x-responsive-nav-link href="{{ route('logout') }}"
                                    @click.prevent="$root.submit();">
-                        <x-icons name="logout" class="mr-2" size="sm" /> {{ __('Log Out') }}
+                        {{ __('Déconnexion') }}
                     </x-responsive-nav-link>
                 </form>
             </div>
